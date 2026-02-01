@@ -1,4 +1,4 @@
-import User from "../models/userModel.js";
+import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -30,6 +30,8 @@ export const register = async (req, res) => {
          role
       });
 
+      await newUser.save();
+
       return res.status(200).json({
          message: `Account created successfully ${fullname}`,
          success: true,
@@ -44,7 +46,6 @@ export const register = async (req, res) => {
 }
 
 export const login = async (req, res) => {
-
    try {
       const { email, password, role} = req.body;
       if (!email || !password || !role) {
@@ -97,7 +98,7 @@ export const login = async (req, res) => {
       return res.status(200).cookie("token", token,{
          maxAge: 1*24*60*60*1000,
          httpOnly: true,
-         sameSite: strict,
+         sameSite: "Strict",
       })
       .json({
          message: `Welcome back ${user.fullname}`,
@@ -113,7 +114,7 @@ export const login = async (req, res) => {
    }
 }
 
-export const logout = async () => {
+export const logout = async (req, res) => {
    try {
       return res.status(200).cookie("token","",{maxAge: 0}).json({
          message: "Logged out successfully",
@@ -129,22 +130,26 @@ export const logout = async () => {
 }
 
 export const updateProfile = async (req, res) => {
-
    try {
       const { fullname, email, phoneNumber, bio, skills } = req.body;
-      const file = req.file;
-      if (!fullname || !email || !phoneNumber || !skills || !bio ) {
-         return res.status(404).json({
-            message: "Missing required fields",
-            success: false,
-         });
-      }
+      // const file = req.file;
+
+      // if (!fullname || !email || !phoneNumber || !skills || !bio ) {
+      //    return res.status(404).json({
+      //       message: "Missing required fields",
+      //       success: false,
+      //    });
+      // }
 
       // cloudinary upload
 
 
 
-      const skillsArray = skills.split(',');
+      let skillsArray;
+      if (skills) {
+         skillsArray = skills.split(",");
+      }
+
       const userId = req.id; // middleware authentication
       let user = await User.findById(userId);
       if (!user) {
@@ -154,11 +159,30 @@ export const updateProfile = async (req, res) => {
          });
       }
 
-      user.fullname = fullname;
-      user.email = email;
-      user.phoneNumber = phoneNumber;
-      user.bio = bio;
-      user.skills = skillsArray;
+      // update database
+
+      if (fullname) {
+         user.fullname = fullname;
+      }
+      if (email) {
+         user.email = email;
+      }
+      if (phoneNumber) {
+         user.phoneNumber = phoneNumber;
+      }
+      if (bio) {
+         user.profile.bio = bio;
+      }
+      if (skills) {
+         user.profile.skills = skillsArray;
+         // user.profile.skills = skills.split(",");
+      }
+
+      // user.fullname = fullname;
+      // user.email = email;
+      // user.phoneNumber = phoneNumber;
+      // user.bio = bio;
+      // user.skills = skillsArray;
       // resume
 
       await user.save();
