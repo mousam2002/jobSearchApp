@@ -37,7 +37,7 @@ function Navbar() {
                   <Button variant="outline">Login</Button>
                 </Link>
                 <Link to={"/register"}>
-                  <Button>Register</Button>
+                  <Button className="bg-[#F83002] hover:bg-[#ff481f] text-white">Register</Button>
                 </Link>
               </div>
             ) : (
